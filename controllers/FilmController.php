@@ -41,6 +41,13 @@ class FilmController
         return $data;
     }
 
+    public function list($search = '')
+    {
+        $films = $this->getFilms($search);
+        header('Content-Type: application/json');
+        echo json_encode($films);
+    }
+
     private function getFilms($search = '')
     {
         $films = [];
@@ -110,5 +117,47 @@ class FilmController
          ];
 
         include __DIR__ . '/../views/films/details.php';
+    }
+
+    public function apiDetails($id)
+    {
+        $this->logger->log("Get", "Detalhes do filme {$id} requisitado.");
+
+        $url = API_URL . 'films/'. $id;
+        
+        $data = $this->fetchApiData($url);
+        
+        if (!$data) {
+            echo "Erro ao buscar os detalhes do filme.";
+            return;
+        }
+        
+        $film = new Film();
+        $film->title = $data['title'];
+        $film->episode_id = $data['episode_id'];
+        $film->opening_crawl = $data['opening_crawl'];
+        $film->release_date = $data['release_date'];
+        $film->director = $data['director'];
+        $film->producers = $data['producer'];
+
+        $film->characters = [];
+        foreach($data['characters'] as $characterUrl){
+            $characterData = $this->fetchApiData($characterUrl);
+            if ($characterData) {
+                $film->characters[] = $characterData['name'];
+            }
+        }
+         // Calcular a idade do filme
+         $releaseDate = new DateTime($film->release_date);
+         $currentDate = new DateTime();
+         $diff = $currentDate->diff($releaseDate);
+         $film->age = [
+             'years' => $diff->y,
+             'months' => $diff->m,
+             'days' => $diff->d,
+         ];
+
+         header('Content-Type: application/json');
+         echo json_encode($film);
     }
 }

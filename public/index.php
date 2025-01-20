@@ -30,5 +30,14 @@ $router->addRoute('/people/details', function() {
 
 $router->addRoute('/logs', [LogController::class, 'index']);
 
+// API
+$router->addRoute('/api/films', function(){
+    $controller = new FilmController();
+    $controller->list();
+});
+$router->addRoute('/api/films/details', function() {
+    $filmController = new FilmController();
+    $filmController->apiDetails($_GET['search']);
+});
 // Dispara o roteamento
 $router->dispatch();
